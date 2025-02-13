@@ -265,6 +265,7 @@
 // export default ChatComponent;
 
 import React, { useState, useEffect } from "react";
+import { logout } from "./firebase";
 import { database, auth } from "./firebase";
 import { ref, push, onValue } from "firebase/database";
 import { v4 as uuidv4 } from "uuid"; // Use uuid for generating unique IDs
@@ -355,7 +356,7 @@ const ChatComponent = ({ name, photoURL }) => {
     <>
       <div className="flex h-screen">
         {/* Sidebar for Users */}
-        <div className="bg-gray-800 text-white w-[250px] p-4">
+        {/* <div className="bg-gray-800 text-white w-[250px] p-4">
           <h2 className="text-lg font-bold mb-4">Users</h2>
           {console.log(users)}
           <ul>
@@ -374,8 +375,107 @@ const ChatComponent = ({ name, photoURL }) => {
               </li>
             ))}
           </ul>
-        </div>
+        </div> */}
+        <nav class="bg-gray-300 shadow-lg h-screen top-0 left-0 min-w-[220px] py-6 px-6 font-[sans-serif] flex flex-col overflow-auto">
+          <div class="flex flex-wrap items-center cursor-pointer">
+            <div class="relative">
+              <img
+                src={auth.currentUser.photoURL}
+                alt="profile"
+                className="w-12 h-12 rounded-full border-white"
+              />
+              <span class="h-3 w-3 rounded-full bg-green-600 border-2 border-white block absolute bottom-0 right-0"></span>
+            </div>
 
+            <div class="ml-4">
+              <p class="text-sm text-[#3949ab] font-semibold">
+                {auth.currentUser.displayName}
+              </p>
+              {/* <p class="text-xs text-gray-500 mt-0.5">D.IN Medicine</p> */}
+            </div>
+          </div>
+
+          <div class="relative bg-gray-100 px-4 py-3 rounded-md mt-6">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="#3949ab"
+              class="w-4 mr-4 inline"
+              viewBox="0 0 118.783 118.783"
+            >
+              <path
+                d="M115.97 101.597 88.661 74.286a47.75 47.75 0 0 0 7.333-25.488c0-26.509-21.49-47.996-47.998-47.996S0 22.289 0 48.798c0 26.51 21.487 47.995 47.996 47.995a47.776 47.776 0 0 0 27.414-8.605l26.984 26.986a9.574 9.574 0 0 0 6.788 2.806 9.58 9.58 0 0 0 6.791-2.806 9.602 9.602 0 0 0-.003-13.577zM47.996 81.243c-17.917 0-32.443-14.525-32.443-32.443s14.526-32.444 32.443-32.444c17.918 0 32.443 14.526 32.443 32.444S65.914 81.243 47.996 81.243z"
+                data-original="#000000"
+              />
+            </svg>
+            <input
+              class="text-sm text-[#3949ab] outline-none bg-transparent px-1 max-w-[130px]"
+              placeholder="Search..."
+            />
+          </div>
+
+          <ul class="space-y-8 pl-3 flex-1 mt-10">
+            {users.map((user) => (
+              <li
+                key={user.uid}
+                className="cursor-pointer hover:bg-gray-200 p-2 rounded"
+                onClick={() => createChatRoom(user)}
+              >
+                <img
+                  src={user.photoURL}
+                  alt={user.displayName} // Use displayName instead of name
+                  className="w-8 h-8 rounded-full mr-4 inline-block"
+                />
+                {user.displayName}
+              </li>
+            ))}
+          </ul>
+
+          <ul class="space-y-8 pl-3 mt-8">
+            {/* <li>
+              <a
+                href="javascript:void(0)"
+                class="text-[#3949ab] font-semibold text-sm flex items-center rounded-md left-0 hover:left-1 relative transition-all"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="currentColor"
+                  class="w-[18px] h-[18px] mr-4"
+                  viewBox="0 0 512 512"
+                >
+                  <circle cx="256" cy="378.5" r="25" data-original="#000000" />
+                  <path
+                    d="M256 0C114.516 0 0 114.497 0 256c0 141.484 114.497 256 256 256 141.484 0 256-114.497 256-256C512 114.516 397.503 0 256 0zm0 472c-119.377 0-216-96.607-216-216 0-119.377 96.607-216 216-216 119.377 0 216 96.607 216 216 0 119.377-96.607 216-216 216z"
+                    data-original="#000000"
+                  />
+                  <path
+                    d="M256 128.5c-44.112 0-80 35.888-80 80 0 11.046 8.954 20 20 20s20-8.954 20-20c0-22.056 17.944-40 40-40s40 17.944 40 40-17.944 40-40 40c-11.046 0-20 8.954-20 20v50c0 11.046 8.954 20 20 20s20-8.954 20-20v-32.531c34.466-8.903 60-40.26 60-77.469 0-44.112-35.888-80-80-80z"
+                    data-original="#000000"
+                  />
+                </svg>
+                <span>Help Center</span>
+              </a>
+            </li> */}
+            <li>
+              <div
+                onClick={logout}
+                class=" cursor-pointertext-[#3949ab] font-semibold text-sm flex items-center rounded-md left-0 hover:left-1 relative transition-all"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="currentColor"
+                  class="w-[18px] h-[18px] mr-4"
+                  viewBox="0 0 6.35 6.35"
+                >
+                  <path
+                    d="M3.172.53a.265.266 0 0 0-.262.268v2.127a.265.266 0 0 0 .53 0V.798A.265.266 0 0 0 3.172.53zm1.544.532a.265.266 0 0 0-.026 0 .265.266 0 0 0-.147.47c.459.391.749.973.749 1.626 0 1.18-.944 2.131-2.116 2.131A2.12 2.12 0 0 1 1.06 3.16c0-.65.286-1.228.74-1.62a.265.266 0 1 0-.344-.404A2.667 2.667 0 0 0 .53 3.158a2.66 2.66 0 0 0 2.647 2.663 2.657 2.657 0 0 0 2.645-2.663c0-.812-.363-1.542-.936-2.03a.265.266 0 0 0-.17-.066z"
+                    data-original="#000000"
+                  />
+                </svg>
+                <span>Logout</span>
+              </div>
+            </li>
+          </ul>
+        </nav>
         {/* Main Chat Window */}
         <div className="flex-1 flex flex-col h-screen w-full">
           {/* Messages Area */}
@@ -402,7 +502,9 @@ const ChatComponent = ({ name, photoURL }) => {
                 </div>
               ))
             ) : (
-              <>click to add chat</>
+              <>
+                <h1 style={{ textAlign: "center" }}>CLICK TO ADD CHAT</h1>
+              </>
             )}
           </div>
 

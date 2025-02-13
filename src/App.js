@@ -50,17 +50,10 @@ function App() {
       {console.log(auth)}
       {auth.currentUser != null && (
         <>
-          {" "}
           <ChatApp
             name={auth.currentUser.displayName}
             photoURL={auth.currentUser.photoURL}
-          />{" "}
-          <button
-            onClick={handleLogout}
-            class="hover:brightness-110 hover:animate-pulse font-bold py-3 px-6 rounded-full bg-gray-900 shadow-lg text-white fixed right-0 top-0"
-          >
-            logout
-          </button>
+          />
         </>
       )}
       {auth.currentUser === null && <LoginComponent checklogin={checklogin} />}
