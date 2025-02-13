@@ -458,7 +458,7 @@ const ChatComponent = ({ name, photoURL }) => {
             <li>
               <div
                 onClick={logout}
-                class=" cursor-pointertext-[#3949ab] font-semibold text-sm flex items-center rounded-md left-0 hover:left-1 relative transition-all"
+                class=" cursor-pointer text-[#3949ab] font-semibold text-sm flex items-center rounded-md left-0 hover:left-1 relative transition-all"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
