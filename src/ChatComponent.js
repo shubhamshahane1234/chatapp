@@ -4,6 +4,30 @@ import { database, auth } from "./firebase";
 import { ref, push, onValue } from "firebase/database";
 import { v4 as uuidv4 } from "uuid"; // Use uuid for generating unique IDs
 
+// const friends = [
+//   {
+//     id: "1",
+//     name: "Alice Johnson",
+//     avatar: "/placeholder.svg?height=40&width=40",
+//     lastMessage: "Hey, how are you?",
+//     isOnline: true,
+//   },
+//   {
+//     id: "2",
+//     name: "Bob Smith",
+//     avatar: "/placeholder.svg?height=40&width=40",
+//     lastMessage: "See you later!",
+//     isOnline: false,
+//   },
+//   {
+//     id: "3",
+//     name: "Charlie Brown",
+//     avatar: "/placeholder.svg?height=40&width=40",
+//     lastMessage: "Thanks for your help!",
+//     isOnline: true,
+//   },
+// ];
+
 const ChatComponent = ({ name, photoURL }) => {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
@@ -11,7 +35,8 @@ const ChatComponent = ({ name, photoURL }) => {
   const [chatRooms, setChatRooms] = useState([]); // List of chat rooms
   const [users, setUsers] = useState([]); // List of users
   const [click, setClick] = useState("");
-
+  const [selectedFriend, setSelectedFriend] = useState();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   // Fetch list of users
   useEffect(() => {
     console.log("Current User:", auth.currentUser); // Logs the current authenticated user
@@ -87,148 +112,176 @@ const ChatComponent = ({ name, photoURL }) => {
     }
   }, [chatID]);
 
+  const handleKeyDown = (event) => {
+    if (event.key === "Enter") {
+      sendMessage();
+    }
+  };
   return (
     <>
-      <div className="flex h-screen">
-        <nav class="bg-gray-300 shadow-lg h-screen top-0 left-0 max-w-[130px] sm:min-w-[220px] sm:py-6 sm:px-6 font-[sans-serif] flex flex-col overflow-x-hidden ">
-          <div class="flex flex-wrap items-center cursor-pointer justify-center ">
-            <div class="relative  ">
+      {/* // new one */}
+      <div className="flex h-screen bg-gray-100">
+        <div
+          className={`w-full md:w-80 bg-white shadow-md flex flex-col ${
+            isMobileMenuOpen ? "" : "hidden md:flex"
+          }`}
+        >
+          {/* <ProfileSection /> */}
+          <div className="p-4 bg-[#727D73] text-white">
+            <div className="flex items-center space-x-4">
               <img
                 src={auth.currentUser.photoURL}
-                alt="profile"
-                className="w-8 h-8 sm:w-12 sm:h-12  rounded-full border-white"
+                alt="Profile"
+                className="w-12 h-12 rounded-full border-2 border-white"
               />
-              <span class="h-3 w-3 rounded-full bg-green-600 border-2 border-white block absolute bottom-0 right-0"></span>
-            </div>
-
-            <div class="ml-4">
-              <p
-                class="text-sm  text-[#3949ab] font-bold"
-                style={{
-                  fontSize: "1.5vmax",
-                  lineHeight: "22px",
-                  textAlign: "center",
-                }}
-              >
-                {auth.currentUser.displayName}
-              </p>
-            </div>
-          </div>
-
-          <div class="relative bg-gray-100 rounded-md m-1 max-w-15 sm:max-w-50  sm:px-4 sm:py-3  mt-6 flex">
-            {/* <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="#3949ab"
-              class="w-4 mr-4 inline"
-              viewBox="0 0 118.783 118.783"
-            >
-              <path
-                d="M115.97 101.597 88.661 74.286a47.75 47.75 0 0 0 7.333-25.488c0-26.509-21.49-47.996-47.998-47.996S0 22.289 0 48.798c0 26.51 21.487 47.995 47.996 47.995a47.776 47.776 0 0 0 27.414-8.605l26.984 26.986a9.574 9.574 0 0 0 6.788 2.806 9.58 9.58 0 0 0 6.791-2.806 9.602 9.602 0 0 0-.003-13.577zM47.996 81.243c-17.917 0-32.443-14.525-32.443-32.443s14.526-32.444 32.443-32.444c17.918 0 32.443 14.526 32.443 32.444S65.914 81.243 47.996 81.243z"
-                data-original="#000000"
-              />
-            </svg> */}
-            <input
-              class="text-sm text-[#3949ab] outline-none bg-transparent px-1 max-w-[130px]"
-              placeholder="Search..."
-            />
-          </div>
-
-          <ul class="space-y-8 pl-3 flex-1 mt-10">
-            {users.map((user) => (
-              <li
-                key={user.uid}
-                className="cursor-pointer hover:bg-gray-200 p-2 rounded flex justify-center items-center"
-                style={{
-                  backgroundColor: click === user && "#D4EBF8",
-                }}
-                onClick={() => {
-                  createChatRoom(user);
-                  setClick(user);
-                }}
-              >
-                <img
-                  src={user.photoURL}
-                  alt={user.displayName} // Use displayName instead of name
-                  className="max-w-8 max-h-8 rounded-full mr-3 inline-block"
-                />
-                <span style={{ fontSize: "1.5vmax" }}> {user.displayName}</span>
-              </li>
-            ))}
-          </ul>
-
-          <ul class="space-y-8 pl-3 mt-8 overflow-x-hidden">
-            <li>
-              <div
-                onClick={logout}
-                class=" cursor-pointer text-[#3949ab] font-semibold text-sm flex items-center rounded-md left-0 hover:left-1 relative transition-all"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="currentColor"
-                  class="w-[18px] h-[18px] mr-4"
-                  viewBox="0 0 6.35 6.35"
-                >
-                  <path
-                    d="M3.172.53a.265.266 0 0 0-.262.268v2.127a.265.266 0 0 0 .53 0V.798A.265.266 0 0 0 3.172.53zm1.544.532a.265.266 0 0 0-.026 0 .265.266 0 0 0-.147.47c.459.391.749.973.749 1.626 0 1.18-.944 2.131-2.116 2.131A2.12 2.12 0 0 1 1.06 3.16c0-.65.286-1.228.74-1.62a.265.266 0 1 0-.344-.404A2.667 2.667 0 0 0 .53 3.158a2.66 2.66 0 0 0 2.647 2.663 2.657 2.657 0 0 0 2.645-2.663c0-.812-.363-1.542-.936-2.03a.265.266 0 0 0-.17-.066z"
-                    data-original="#000000"
-                  />
-                </svg>
-                <span>Logout</span>
+              <div>
+                <h2 className="font-bold text-lg">
+                  {" "}
+                  {auth.currentUser.displayName}
+                </h2>
+                {/* <p className="text-indigo-200 text-sm">Online</p> */}
               </div>
-            </li>
-          </ul>
-        </nav>
-        {/* Main Chat Window */}
-        <div className="flex-1 flex flex-col w-full ">
-          {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {chatID ? (
-              messages.map((msg, index) => (
-                <div
-                  key={index}
-                  className={`flex ${
-                    msg.uid === auth.currentUser.uid
-                      ? "justify-end"
-                      : "justify-start"
-                  }`}
-                >
-                  <div
-                    className={`max-w-xs px-4 py-2 rounded-lg ${
-                      msg.uid === auth.currentUser.uid
-                        ? "bg-indigo-500 text-white"
-                        : "bg-gray-200 text-gray-800"
-                    }`}
-                  >
-                    <strong>{msg.username}</strong>: {msg.text}
-                  </div>
-                </div>
-              ))
-            ) : (
-              <>
-                <h1 style={{ textAlign: "center" }}>CLICK TO ADD CHAT</h1>
-              </>
-            )}
+            </div>
+            <div className="mt-4">
+              <button
+                className="w-full bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-150 ease-in-out"
+                onClick={() => alert("Edit Functionality Coming Soon")}
+              >
+                Edit Profile
+              </button>
+            </div>
           </div>
-
-          {/* Message Input */}
-          <div className="border-t p-4 flex space-x-2">
-            <input
-              type="text"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Type your message..."
-              className="flex-1 border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              disabled={!chatID} // Disable input if no chat room is selected
-            />
+          {/* <FriendsList
+            onSelectFriend={(friendId) => {
+              setSelectedFriend(friendId);
+              setIsMobileMenuOpen(false);
+            }}
+            selectedFriend={selectedFriend}
+          /> */}
+          <div className="flex-1 overflow-y-auto">
+            <h2 className="text-xl font-semibold p-4 border-b">
+              Global Friends
+            </h2>
+            <ul>
+              {users.map((user) => (
+                <li
+                  key={user.uid}
+                  className={`p-4 border-b hover:bg-gray-100 cursor-pointer ${
+                    click.displayName === user.displayName ? "bg-gray-200" : ""
+                  }`}
+                  onClick={() => {
+                    createChatRoom(user);
+                    setClick(user);
+                  }}
+                >
+                  <div className="flex items-center space-x-4">
+                    <div className="relative">
+                      <img
+                        src={user.photoURL}
+                        alt={user.displayName}
+                        className="w-10 h-10 rounded-full"
+                      />
+                      {/* {friend.isOnline && (
+                        <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-white rounded-full"></span>
+                      )} */}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {user.displayName}
+                      </p>
+                      {/* <p className="text-sm text-gray-500 truncate">{friend.lastMessage}</p> */}
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+        <div className="flex-1 flex flex-col">
+          <div className="md:hidden bg-white p-4 shadow-md">
             <button
-              type="submit"
-              className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500"
-              onClick={sendMessage}
-              disabled={!chatID} // Disable button if no chat room is selected
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="text-gray-500 hover:text-gray-700 focus:outline-none"
             >
-              Send
+              <svg
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              </svg>
             </button>
           </div>
+          {/* <ChatScreen selectedFriend={selectedFriend} /> */}
+          {!chatID ? (
+            <div className="flex items-center justify-center h-full bg-gray-50 ">
+              <p className="text-xl text-gray-500">
+                Select a friend to start chatting
+              </p>
+            </div>
+          ) : (
+            <div className="flex flex-col h-full ">
+              <div className="p-4 border-b flex items-center space-x-4 bg-[#E3E1D9]">
+                <img
+                  src={click.photoURL}
+                  alt="Friend"
+                  className="w-10 h-10 rounded-full"
+                />
+                <div>
+                  <h2 className="font-bold">{click.displayName}</h2>
+                  {/* <p className="text-sm text-gray-500">Online</p> */}
+                </div>
+              </div>
+              <div className="flex-grow overflow-y-auto p-4 space-y-4">
+                {messages.map((msg, index) => (
+                  <div
+                    key={index}
+                    className={`flex ${
+                      msg.uid === auth.currentUser.uid
+                        ? "justify-end"
+                        : "justify-start"
+                    }`}
+                  >
+                    <div
+                      className={`max-w-xs px-4 py-2 rounded-lg ${
+                        msg.uid === auth.currentUser.uid
+                          ? "bg-[#D0DDD0] text-[#727D73]"
+                          : "bg-gray-200 text-gray-800"
+                      }`}
+                    >
+                      {/* <strong>{msg.username}</strong>: */}
+                      {msg.text}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="p-4 border-t">
+                <div className="flex space-x-2">
+                  <input
+                    type="text"
+                    className="flex-grow px-4 py-2 border rounded-full "
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Type your message..."
+                    disabled={!chatID}
+                  />
+                  <button
+                    className="bg-gray-700 text-white px-4 py-2 rounded-full hover:bg-[#727D73] "
+                    onClick={sendMessage}
+                  >
+                    Send
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </>
