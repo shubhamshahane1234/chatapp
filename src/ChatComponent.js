@@ -151,13 +151,7 @@ const ChatComponent = ({ name, photoURL }) => {
               </button>
             </div>
           </div>
-          {/* <FriendsList
-            onSelectFriend={(friendId) => {
-              setSelectedFriend(friendId);
-              setIsMobileMenuOpen(false);
-            }}
-            selectedFriend={selectedFriend}
-          /> */}
+          {/* global friends  */}
           <div className="flex-1 overflow-y-auto">
             <h2 className="text-xl font-semibold p-4 border-b">
               Global Friends
@@ -172,6 +166,7 @@ const ChatComponent = ({ name, photoURL }) => {
                   onClick={() => {
                     createChatRoom(user);
                     setClick(user);
+                    setIsMobileMenuOpen(false);
                   }}
                 >
                   <div className="flex items-center space-x-4">
@@ -196,7 +191,15 @@ const ChatComponent = ({ name, photoURL }) => {
               ))}
             </ul>
           </div>
+          <button
+            type="button"
+            onClick={logout}
+            className="mt-auto text-white hover:bg-[#727d73]  bg-[#565656]  transition"
+          >
+            Logout
+          </button>
         </div>
+
         <div className="flex-1 flex flex-col">
           <div className="md:hidden bg-white p-4 shadow-md">
             <button
