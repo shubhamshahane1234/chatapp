@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { database, loginWithGoogle } from "./firebase"; // Make sure loginWithGoogle is properly defined
 import { ref, set, get } from "firebase/database"; // Import necessary Firebase methods
-
+import { useNavigate } from "react-router";
 const LoginComponent = ({ checklogin }) => {
   const [loading, setLoading] = useState(false);
+  let navigate = useNavigate();
 
   const handleLogin = async () => {
     setLoading(true);
@@ -36,7 +37,10 @@ const LoginComponent = ({ checklogin }) => {
     } catch (error) {
       console.error("Login Error:", error);
     }
+
     setLoading(false);
+    // window.location.href = "/";
+    navigate("/");
   };
 
   return (

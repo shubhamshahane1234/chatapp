@@ -1,4 +1,5 @@
 import logo from "./logo.svg";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import "./App.css";
 import ChatApp from "./ChatComponent";
 import LoginComponent from "./Login";
@@ -6,6 +7,7 @@ import { logout } from "./firebase";
 import { onAuthStateChanged } from "firebase/auth"; // Import onAuthStateChanged
 import React, { useState, useEffect } from "react";
 import { auth } from "./firebase";
+import PrivateRoute from "./pages/PrivateRoute";
 
 function App() {
   const [login, setLogin] = useState(null);
@@ -46,18 +48,44 @@ function App() {
   }, []);
 
   return (
-    <div className="">
-      {console.log(auth)}
-      {auth.currentUser != null && (
-        <>
-          <ChatApp
-            name={auth.currentUser.displayName}
-            photoURL={auth.currentUser.photoURL}
+    <>
+      {" "}
+      {/* <div className="">
+        {console.log(auth)}
+        {auth.currentUser != null && (
+          <>
+            <ChatApp
+              name={auth.currentUser.displayName}
+              photoURL={auth.currentUser.photoURL}
+            />
+          </>
+        )}
+        {auth.currentUser === null && (
+          <LoginComponent checklogin={checklogin} />
+        )}
+      </div> */}
+      {/* // new */}
+      <Router>
+        <Routes>
+          <Route
+            path="/login"
+            element={<LoginComponent checklogin={checklogin} />}
           />
-        </>
-      )}
-      {auth.currentUser === null && <LoginComponent checklogin={checklogin} />}
-    </div>
+
+          <Route
+            path="/"
+            element={
+              <PrivateRoute>
+                <ChatApp
+                  name={auth.currentUser?.displayName}
+                  photoURL={auth.currentUser?.photoURL}
+                />
+              </PrivateRoute>
+            }
+          ></Route>
+        </Routes>
+      </Router>
+    </>
   );
 }
 

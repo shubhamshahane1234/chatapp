@@ -38,7 +38,9 @@ const ChatComponent = ({ name, photoURL }) => {
   const [selectedFriend, setSelectedFriend] = useState();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   // Fetch list of users
+  console.log("chat render");
   useEffect(() => {
+    console.log("chat use effect render");
     console.log("Current User:", auth.currentUser); // Logs the current authenticated user
     if (!auth.currentUser) {
       console.error("No authenticated user found.");
@@ -249,7 +251,7 @@ const ChatComponent = ({ name, photoURL }) => {
                       msg.uid === auth.currentUser.uid
                         ? "justify-end"
                         : "justify-start"
-                    }`}
+                    } ${index === messages.length ? "hover:bg-[#727D73]" : ""}`}
                   >
                     <div
                       className={`max-w-xs px-4 py-2 rounded-lg ${
