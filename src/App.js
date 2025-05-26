@@ -8,9 +8,11 @@ import { onAuthStateChanged } from "firebase/auth"; // Import onAuthStateChanged
 import React, { useState, useEffect } from "react";
 import { auth } from "./firebase";
 import PrivateRoute from "./pages/PrivateRoute";
+import Signup from "./pages/Signup";
 
 function App() {
   const [login, setLogin] = useState(null);
+  const [loggedIn, setloggedin] = useState(null);
   // Handle Log-Out
   const handleLogout = () => {
     logout()
@@ -35,14 +37,16 @@ function App() {
       console.log(login);
       if (user) {
         checklogin(user);
+        setloggedin(user);
         // setUsername(user.displayName || user.email);
         // Set the username based on user data
       } else {
         checklogin(null);
+        setloggedin(null);
         // setUsername("");
       }
     });
-
+    console.log(auth, ".......authentication");
     // Cleanup subscription on component unmount
     return () => unsubscribe();
   }, []);
@@ -71,7 +75,7 @@ function App() {
             path="/login"
             element={<LoginComponent checklogin={checklogin} />}
           />
-
+          <Route path="/signup" element={<Signup />} />
           <Route
             path="/"
             element={

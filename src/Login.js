@@ -1,16 +1,23 @@
 import React, { useState } from "react";
-import { database, loginWithGoogle } from "./firebase"; // Make sure loginWithGoogle is properly defined
+import { database, signinWithGoogle } from "./firebase"; // Make sure loginWithGoogle is properly defined
 import { ref, set, get } from "firebase/database"; // Import necessary Firebase methods
 import { useNavigate } from "react-router";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { getAuth, sendPasswordResetEmail } from "firebase/auth";
+import { auth } from "./firebase";
 const LoginComponent = ({ checklogin }) => {
+  const auth = getAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   let navigate = useNavigate();
-
-  const handleLogin = async () => {
+  // google signup
+  const handleGoogleSignup = async () => {
     setLoading(true);
     try {
       // Log in with Google
-      const result = await loginWithGoogle();
+      const result = await signinWithGoogle();
       const loggedInUser = result.user;
 
       // Check if the user exists in the database
@@ -42,50 +49,129 @@ const LoginComponent = ({ checklogin }) => {
     // window.location.href = "/";
     navigate("/");
   };
-
+  const forgotPassword = async (email) => {
+    try {
+      await sendPasswordResetEmail(auth, email);
+      console.log("✅ Password reset email sent!");
+      // Show success message to user in UI
+    } catch (error) {
+      console.error("❌ Error sending password reset email:", error);
+      // Handle errors, e.g., invalid email, user not found, etc.
+    }
+  };
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    try {
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      console.log("User logged in:", userCredential.user);
+      setError("");
+      navigate("/");
+      // redirect or show success message
+    } catch (err) {
+      console.error(err.message);
+      //   setError(err.message);
+    }
+  };
   return (
-    <div className="flex justify-center items-center h-screen bg-gray-100">
-      <div className="bg-white shadow-lg rounded-lg p-8 max-w-sm w-full">
-        <h2 className="text-2xl font-semibold text-center mb-6">Login</h2>
+    // <div className="flex justify-center items-center h-screen bg-gray-100">
+    //   <div className="bg-white shadow-lg rounded-lg p-8 max-w-sm w-full">
+    //     <h2 className="text-2xl font-semibold text-center mb-6">Login</h2>
 
-        {/* Google Login Button */}
-        <button
-          onClick={handleLogin}
-          disabled={loading}
-          className="flex items-center justify-center w-full py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-        >
-          {loading ? "Logging in..." : "Sign in with Google"}
-        </button>
+    //     {/* Google Login Button */}
+    //     <button
+    //       onClick={handleLogin}
+    //       disabled={loading}
+    //       className="flex items-center justify-center w-full py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+    //     >
+    //       {loading ? "Logging in..." : "Sign in with Google"}
+    //     </button>
 
-        {/* Or Separator */}
-        {/* <div className="my-6 flex items-center justify-center">
-          <span className="bg-white px-4 text-gray-500">or</span>
-        </div> */}
+    //     {/* Or Separator */}
+    //     {/* <div className="my-6 flex items-center justify-center">
+    //       <span className="bg-white px-4 text-gray-500">or</span>
+    //     </div> */}
 
-        {/* Email & Password Inputs */}
-        {/* <input
-          type="email"
-          placeholder="Email"
-          className="mb-4 w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
-        /> */}
-        {/* <input
-          type="password"
-          placeholder="Password"
-          className="mb-6 w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
-        /> */}
+    //     {/* Email & Password Inputs */}
+    //     {/* <input
+    //       type="email"
+    //       placeholder="Email"
+    //       className="mb-4 w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
+    //     /> */}
+    //     {/* <input
+    //       type="password"
+    //       placeholder="Password"
+    //       className="mb-6 w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
+    //     /> */}
 
-        {/* Login Button */}
-        {/* <button className="w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-          Login
-        </button> */}
+    //     {/* Login Button */}
+    //     {/* <button className="w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+    //       Login
+    //     </button> */}
 
-        {/* Sign-up Link */}
-        {/* <div className="mt-6 text-center text-gray-500">
-          Don't have an account?{" "}
-          <a href="#" className="text-blue-500 hover:underline">
-            Sign up
-          </a>
-        </div> */}
+    //     {/* Sign-up Link */}
+    //     {/* <div className="mt-6 text-center text-gray-500">
+    //       Don't have an account?{" "}
+    //       <a href="#" className="text-blue-500 hover:underline">
+    //         Sign up
+    //       </a>
+    //     </div> */}
+    //   </div>
+    // </div>
+
+    <div className="flex flex-col items-center justify-center h-screen">
+      <div className="w-full max-w-md bg-white rounded-lg shadow-md p-6">
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">Login</h2>
+        <form className="flex flex-col">
+          <input
+            type="email"
+            className="bg-gray-100 text-gray-900 border-0 rounded-md p-2 mb-4 focus:bg-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500 transition ease-in-out duration-150"
+            placeholder="Email address"
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <input
+            type="password"
+            className="bg-gray-100 text-gray-900 border-0 rounded-md p-2 mb-4 focus:bg-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500 transition ease-in-out duration-150"
+            placeholder="Password"
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <div className="flex items-center justify-between flex-wrap">
+            <label
+              htmlFor="remember-me"
+              className="text-sm text-gray-900 cursor-pointer"
+            >
+              <input type="checkbox" id="remember-me" className="mr-2" />
+              Remember me
+            </label>
+            <a
+              onClick={() => {
+                forgotPassword(email);
+              }}
+              className="text-sm text-blue-500 hover:underline mb-0.5"
+            >
+              Forgot password?
+            </a>
+            <p className="text-gray-900 mt-4">
+              {" "}
+              Don't have an account?{" "}
+              <a
+                href="/signup"
+                className="text-sm text-blue-500 -200 hover:underline mt-4"
+              >
+                Signup
+              </a>
+            </p>
+          </div>
+          <button
+            onClick={handleLogin}
+            className="bg-gradient-to-r from-indigo-500 to-blue-500 text-white font-bold py-2 px-4 rounded-md mt-4 hover:bg-indigo-600 hover:to-blue-600 transition ease-in-out duration-150"
+          >
+            Login
+          </button>
+        </form>
       </div>
     </div>
   );

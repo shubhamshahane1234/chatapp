@@ -37,7 +37,7 @@ const provider = new GoogleAuthProvider();
 export { auth, provider };
 
 // Function to handle Google login
-export const loginWithGoogle = () => {
+export const signinWithGoogle = () => {
   return signInWithPopup(auth, provider);
 };
 

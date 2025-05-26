@@ -1,32 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { logout } from "./firebase";
 import { database, auth } from "./firebase";
-import { ref, push, onValue } from "firebase/database";
+import { ref, push, onValue, onDisconnect, update } from "firebase/database";
 import { v4 as uuidv4 } from "uuid"; // Use uuid for generating unique IDs
-
-// const friends = [
-//   {
-//     id: "1",
-//     name: "Alice Johnson",
-//     avatar: "/placeholder.svg?height=40&width=40",
-//     lastMessage: "Hey, how are you?",
-//     isOnline: true,
-//   },
-//   {
-//     id: "2",
-//     name: "Bob Smith",
-//     avatar: "/placeholder.svg?height=40&width=40",
-//     lastMessage: "See you later!",
-//     isOnline: false,
-//   },
-//   {
-//     id: "3",
-//     name: "Charlie Brown",
-//     avatar: "/placeholder.svg?height=40&width=40",
-//     lastMessage: "Thanks for your help!",
-//     isOnline: true,
-//   },
-// ];
 
 const ChatComponent = ({ name, photoURL }) => {
   const [message, setMessage] = useState("");
@@ -37,6 +13,7 @@ const ChatComponent = ({ name, photoURL }) => {
   const [click, setClick] = useState("");
   const [selectedFriend, setSelectedFriend] = useState();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   // Fetch list of users
   console.log("chat render");
   useEffect(() => {
@@ -119,6 +96,47 @@ const ChatComponent = ({ name, photoURL }) => {
       sendMessage();
     }
   };
+
+  // check online status
+  useEffect(() => {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const userStatusRef = ref(database, `users/${user.uid}`);
+
+    const connectedRef = ref(database, ".info/connected");
+
+    const isOnline = {
+      online: true,
+      lastOnline: Date.now(),
+    };
+
+    const isOffline = {
+      online: false,
+      lastOnline: Date.now(),
+    };
+
+    const handleUnload = () => {
+      // Try to update status immediately on tab close
+      update(userStatusRef, isOffline);
+    };
+
+    const unsubscribe = onValue(connectedRef, (snapshot) => {
+      if (snapshot.val() === false) return;
+
+      onDisconnect(userStatusRef)
+        .update(isOffline)
+        .then(() => {
+          update(userStatusRef, isOnline);
+        });
+    });
+    window.addEventListener("beforeunload", handleUnload);
+    return () => {
+      unsubscribe();
+      window.removeEventListener("beforeunload", handleUnload);
+    };
+  }, []);
+
   return (
     <>
       {/* // new one */}
@@ -141,7 +159,7 @@ const ChatComponent = ({ name, photoURL }) => {
                   {" "}
                   {auth.currentUser.displayName}
                 </h2>
-                {/* <p className="text-indigo-200 text-sm">Online</p> */}
+                <p className="text-indigo-200 text-sm">Online</p>
               </div>
             </div>
             <div className="mt-4">
@@ -178,9 +196,9 @@ const ChatComponent = ({ name, photoURL }) => {
                         alt={user.displayName}
                         className="w-10 h-10 rounded-full"
                       />
-                      {/* {friend.isOnline && (
+                      {user.online && (
                         <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-white rounded-full"></span>
-                      )} */}
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-900 truncate">
