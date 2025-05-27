@@ -1,24 +1,26 @@
 import React, { useState, useEffect } from "react";
 import { logout } from "./firebase";
 import { database, auth } from "./firebase";
-import { ref, push, onValue, onDisconnect, update } from "firebase/database";
+import {
+  ref,
+  push,
+  onValue,
+  onDisconnect,
+  update,
+  get,
+} from "firebase/database";
 import { v4 as uuidv4 } from "uuid"; // Use uuid for generating unique IDs
 
 const ChatComponent = ({ name, photoURL }) => {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
   const [chatID, setChatID] = useState(""); // Store the current chat room ID
-  const [chatRooms, setChatRooms] = useState([]); // List of chat rooms
   const [users, setUsers] = useState([]); // List of users
   const [click, setClick] = useState("");
-  const [selectedFriend, setSelectedFriend] = useState();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Fetch list of users
-  console.log("chat render");
+  // Fetch list of users  start
   useEffect(() => {
-    console.log("chat use effect render");
-    console.log("Current User:", auth.currentUser); // Logs the current authenticated user
     if (!auth.currentUser) {
       console.error("No authenticated user found.");
       return;
@@ -27,7 +29,6 @@ const ChatComponent = ({ name, photoURL }) => {
     const usersRef = ref(database, "users");
     onValue(usersRef, (snapshot) => {
       const data = snapshot.val();
-      console.log("Fetched data:", data); // Logs the fetched data
 
       const userList = [];
       for (let id in data) {
@@ -36,12 +37,12 @@ const ChatComponent = ({ name, photoURL }) => {
         }
       }
 
-      console.log("Filtered userList:", userList);
       setUsers(userList);
     });
   }, []);
+  // Fetch list of users  start end
 
-  // Create or join a chat room
+  // Create or join a chat room start
   const createChatRoom = (selectedUser) => {
     // Generate a chat room ID based on both user IDs (to ensure uniqueness)
     const newChatID = [auth.currentUser.uid, selectedUser.uid].sort().join("-");
@@ -58,8 +59,9 @@ const ChatComponent = ({ name, photoURL }) => {
       }
     });
   };
+  // Create or join a chat room end
 
-  // Send message to Firebase in the current chat room
+  // Send message to Firebase in the current chat room  start
   const sendMessage = () => {
     if (message && chatID) {
       const messagesRef = ref(database, `chatRooms/${chatID}/messages`);
@@ -69,13 +71,17 @@ const ChatComponent = ({ name, photoURL }) => {
         text: message,
         timestamp: Date.now(),
         photoURL: auth.currentUser.photoURL,
+        seenBy: {
+          [auth.currentUser.uid]: true, // sender sees their own message
+        },
       };
       push(messagesRef, newMessage);
       setMessage(""); // Clear the input field after sending
     }
   };
+  // Send message to Firebase in the current chat room  end
 
-  // Listen for real-time message updates for the current chat room
+  // Listen for real-time message updates for the current chat room start
   useEffect(() => {
     if (chatID) {
       const messagesRef = ref(database, `chatRooms/${chatID}/messages`);
@@ -90,52 +96,87 @@ const ChatComponent = ({ name, photoURL }) => {
       });
     }
   }, [chatID]);
+  // Listen for real-time message updates for the current chat room start end
 
+  // send button enter event start
   const handleKeyDown = (event) => {
     if (event.key === "Enter") {
       sendMessage();
     }
   };
+  // send button enter event end
 
-  // check online status
-  useEffect(() => {
-    const user = auth.currentUser;
-    if (!user) return;
+  // check online status start
+  // useEffect(() => {
+  //   const user = auth.currentUser;
+  //   if (!user) return;
 
-    const userStatusRef = ref(database, `users/${user.uid}`);
+  //   const userStatusRef = ref(database, `users/${user.uid}`);
 
-    const connectedRef = ref(database, ".info/connected");
+  //   const connectedRef = ref(database, ".info/connected");
 
-    const isOnline = {
-      online: true,
-      lastOnline: Date.now(),
-    };
+  //   const isOnline = {
+  //     online: true,
+  //     lastOnline: Date.now(),
+  //   };
 
-    const isOffline = {
-      online: false,
-      lastOnline: Date.now(),
-    };
+  //   const isOffline = {
+  //     online: false,
+  //     lastOnline: Date.now(),
+  //   };
 
-    const handleUnload = () => {
-      // Try to update status immediately on tab close
-      update(userStatusRef, isOffline);
-    };
+  //   const handleUnload = () => {
+  //     // Try to update status immediately on tab close
+  //     update(userStatusRef, isOffline);
+  //   };
 
-    const unsubscribe = onValue(connectedRef, (snapshot) => {
-      if (snapshot.val() === false) return;
+  //   const unsubscribe = onValue(connectedRef, (snapshot) => {
+  //     if (snapshot.val() === false) return;
 
-      onDisconnect(userStatusRef)
-        .update(isOffline)
-        .then(() => {
-          update(userStatusRef, isOnline);
+  //     onDisconnect(userStatusRef)
+  //       .update(isOffline)
+  //       .then(() => {
+  //         update(userStatusRef, isOnline);
+  //       });
+  //   });
+  //   window.addEventListener("beforeunload", handleUnload);
+  //   return () => {
+  //     unsubscribe();
+  //     window.removeEventListener("beforeunload", handleUnload);
+  //   };
+  // }, []);
+  // check online status start end
+
+  // update seen status start
+  const markMessageAsSeen = async () => {
+    try {
+      const messagesRef = ref(database, `chatRooms/${chatID}/messages`);
+      const snapshot = await get(messagesRef);
+
+      if (snapshot.exists()) {
+        const messages = snapshot.val();
+        const messageKeys = Object.keys(messages);
+        const lastMessageID = messageKeys[messageKeys.length - 1];
+
+        const seenRef = ref(
+          database,
+          `chatRooms/${chatID}/messages/${lastMessageID}/seenBy`
+        );
+
+        update(seenRef, {
+          [auth.currentUser.uid]: true,
         });
-    });
-    window.addEventListener("beforeunload", handleUnload);
-    return () => {
-      unsubscribe();
-      window.removeEventListener("beforeunload", handleUnload);
-    };
-  }, []);
+      }
+    } catch (error) {
+      console.error("Error updating seen status:", error);
+    }
+  };
+
+  useEffect(() => {
+    markMessageAsSeen();
+  }, [chatID]);
+
+  // update seen status end
 
   return (
     <>
@@ -171,7 +212,7 @@ const ChatComponent = ({ name, photoURL }) => {
               </button>
             </div>
           </div>
-          {/* global friends  */}
+          {/* global friends  start side bar  */}
           <div className="flex-1 overflow-y-auto">
             <h2 className="text-xl font-semibold p-4 border-b">
               Global Friends
@@ -241,7 +282,9 @@ const ChatComponent = ({ name, photoURL }) => {
               </svg>
             </button>
           </div>
-          {/* <ChatScreen selectedFriend={selectedFriend} /> */}
+          {/* global friends  start side bar  */}
+          {console.log(chatID, "chat id")}
+          {/* chat screen open start  */}
           {!chatID ? (
             <div className="flex items-center justify-center h-full bg-gray-50 ">
               <p className="text-xl text-gray-500">
@@ -262,27 +305,48 @@ const ChatComponent = ({ name, photoURL }) => {
                 </div>
               </div>
               <div className="flex-grow overflow-y-auto p-4 space-y-4">
-                {messages.map((msg, index) => (
-                  <div
-                    key={index}
-                    className={`flex ${
-                      msg.uid === auth.currentUser.uid
-                        ? "justify-end"
-                        : "justify-start"
-                    } ${index === messages.length ? "hover:bg-[#727D73]" : ""}`}
-                  >
+                {messages.map((msg, index) => {
+                  const senderid = msg.uid;
+                  const receiverid =
+                    msg.uid !== auth.currentUser.uid && auth.currentUser.uid;
+                  console.log(senderid, receiverid);
+                  console.log(msg.seenBy);
+                  const hasSeen = msg?.seenBy[receiverid];
+                  return (
                     <div
-                      className={`max-w-xs px-4 py-2 rounded-lg ${
+                      key={index}
+                      className={`flex ${
                         msg.uid === auth.currentUser.uid
-                          ? "bg-[#D0DDD0] text-[#727D73]"
-                          : "bg-gray-200 text-gray-800"
+                          ? "justify-end"
+                          : "justify-start"
+                      } ${
+                        index === messages.length ? "hover:bg-[#727D73]" : ""
                       }`}
                     >
-                      {/* <strong>{msg.username}</strong>: */}
-                      {msg.text}
+                      <div
+                        className={`max-w-xs px-4 py-2 rounded-lg ${
+                          msg.uid === auth.currentUser.uid
+                            ? "bg-[#D0DDD0] text-[#727D73]"
+                            : "bg-gray-200 text-gray-800"
+                        }`}
+                      >
+                        {/* <strong>{msg.username}</strong>: */}
+                        {msg.text}
+                        {hasSeen && (
+                          <span
+                            style={{
+                              color: "green",
+                              fontSize: "15px",
+                              marginLeft: "2vw",
+                            }}
+                          >
+                            seen
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
               <div className="p-4 border-t">
                 <div className="flex space-x-2">
@@ -305,6 +369,7 @@ const ChatComponent = ({ name, photoURL }) => {
               </div>
             </div>
           )}
+          {/* chat screen open end  */}
         </div>
       </div>
     </>
