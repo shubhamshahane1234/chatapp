@@ -306,18 +306,12 @@ const ChatComponent = ({ name, photoURL }) => {
               </div>
               <div className="flex-grow overflow-y-auto p-4 space-y-4">
                 {messages.map((msg, index) => {
-                  const isSender = msg.uid === auth.currentUser.uid;
-                  const otherUserId = !isSender ? msg.uid : null;
-
-                  const hasSeen = isSender
-                    ? msg?.seenBy?.[otherUserId] // sender checks if receiver has seen it
-                    : msg?.seenBy?.[auth.currentUser.uid];
                   const senderid = msg.uid;
                   const receiverid =
                     msg.uid !== auth.currentUser.uid && auth.currentUser.uid;
                   console.log(senderid, receiverid);
                   console.log(msg.seenBy);
-
+                  const hasSeen = msg?.seenBy[receiverid];
                   return (
                     <div
                       key={index}
@@ -338,7 +332,7 @@ const ChatComponent = ({ name, photoURL }) => {
                       >
                         {/* <strong>{msg.username}</strong>: */}
                         {msg.text}
-                        {hasSeen && (
+                        {hasSeen && msg.uid === auth.currentUser.uid && (
                           <span
                             style={{
                               color: "green",
