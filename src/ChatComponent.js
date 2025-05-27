@@ -308,7 +308,9 @@ const ChatComponent = ({ name, photoURL }) => {
                 {messages.map((msg, index) => {
                   const senderid = msg.uid;
                   const receiverid =
-                    msg.uid !== auth.currentUser.uid && auth.currentUser.uid;
+                    msg.uid !== auth.currentUser.uid
+                      ? auth.currentUser.uid
+                      : null;
                   console.log(senderid, receiverid);
                   console.log(msg.seenBy);
                   const hasSeen = msg?.seenBy[receiverid];
