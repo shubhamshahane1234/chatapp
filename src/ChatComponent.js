@@ -305,15 +305,15 @@ const ChatComponent = ({ name, photoURL }) => {
                 </div>
               </div>
               <div className="flex-grow overflow-y-auto p-4 space-y-4">
+                {console.log(click)}
                 {messages.map((msg, index) => {
                   const senderid = msg.uid;
-                  const receiverid =
-                    msg.uid !== auth.currentUser.uid
-                      ? auth.currentUser.uid
-                      : null;
+                  const receiverid = click.uid;
+
                   console.log(senderid, receiverid);
                   console.log(msg.seenBy);
-                  const hasSeen = msg?.seenBy[receiverid];
+                  const hasSeen =
+                    msg?.seenBy[receiverid] && msg.uid === auth.currentUser.uid;
                   return (
                     <div
                       key={index}
@@ -334,7 +334,7 @@ const ChatComponent = ({ name, photoURL }) => {
                       >
                         {/* <strong>{msg.username}</strong>: */}
                         {msg.text}
-                        {hasSeen && msg.uid === auth.currentUser.uid && (
+                        {hasSeen && (
                           <span
                             style={{
                               color: "green",
