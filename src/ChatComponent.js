@@ -82,29 +82,51 @@ const ChatComponent = ({ name, photoURL }) => {
   // Send message to Firebase in the current chat room  end
 
   // Listen for real-time message updates for the current chat room start
-  useEffect(() => {
-    if (chatID) {
-      const messagesRef = ref(database, `chatRooms/${chatID}/messages`);
-      onValue(messagesRef, (snapshot) => {
-        const data = snapshot.val();
-        const loadedMessages = [];
-        for (let id in data) {
-          loadedMessages.push(data[id]);
-        }
-        loadedMessages.sort((a, b) => a.timestamp - b.timestamp); // Sort messages by timestamp
-        setMessages(loadedMessages); // Update the messages state with the new messages
-      });
-    }
-  }, [chatID]);
-  // Listen for real-time message updates for the current chat room start end
+  // useEffect(() => {
+  //   if (chatID) {
+  //     const messagesRef = ref(database, `chatRooms/${chatID}/messages`);
+  //     onValue(messagesRef, (snapshot) => {
+  //       const data = snapshot.val();
+  //       const loadedMessages = [];
+  //       for (let id in data) {
+  //         loadedMessages.push(data[id]);
+  //       }
+  //       loadedMessages.sort((a, b) => a.timestamp - b.timestamp);
+  //        // Sort messages by timestamp
+  //       setMessages(loadedMessages); // Update the messages state with the new messages
+  //     });
+  //   }
+  // }, [chatID]);
+  // // Listen for real-time message updates for the current chat room start end
 
-  // send button enter event start
+  // // send button enter event start
   const handleKeyDown = (event) => {
     if (event.key === "Enter") {
       sendMessage();
     }
   };
   // send button enter event end
+
+  // new lsitener to fix seen feature
+  useEffect(() => {
+    if (chatID) {
+      const messagesRef = ref(database, `chatRooms/${chatID}/messages`);
+      const unsubscribe = onValue(messagesRef, (snapshot) => {
+        const data = snapshot.val();
+        const loadedMessages = [];
+        for (let id in data) {
+          loadedMessages.push({ ...data[id], id }); // capture id if needed later
+        }
+        loadedMessages.sort((a, b) => a.timestamp - b.timestamp);
+        setMessages(loadedMessages);
+
+        // 🔥 Mark messages as seen on new message arrival
+        markMessageAsSeen(loadedMessages);
+      });
+
+      return () => unsubscribe(); // cleanup
+    }
+  }, [chatID]);
 
   // check online status start
   // useEffect(() => {
@@ -173,6 +195,7 @@ const ChatComponent = ({ name, photoURL }) => {
   };
 
   useEffect(() => {
+    // add onvalue here means onvalue change in adata base reference it will call mark message seen
     markMessageAsSeen();
   }, [chatID]);
 
@@ -314,6 +337,8 @@ const ChatComponent = ({ name, photoURL }) => {
                   console.log(msg.seenBy);
                   const hasSeen =
                     msg?.seenBy[receiverid] && msg.uid === auth.currentUser.uid;
+
+                  // if window kept open it should check database changes and update seen funcrionality or i need to update  seen page
                   return (
                     <div
                       key={index}
