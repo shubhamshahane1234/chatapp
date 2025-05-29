@@ -263,7 +263,10 @@ const ChatComponent = ({ name, photoURL }) => {
           </button>
         </div>
 
-        <div className="flex-1 flex flex-col">
+        {/* right chat  */}
+
+        <div className="flex-1 flex flex-col h-screen">
+          {/* hamburger  */}
           <div className="md:hidden bg-white p-4 shadow-md">
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -284,8 +287,7 @@ const ChatComponent = ({ name, photoURL }) => {
               </svg>
             </button>
           </div>
-          {/* global friends  start side bar  */}
-          {console.log(chatID, "chat id")}
+
           {/* chat screen open start  */}
           {!chatID ? (
             <div className="flex items-center justify-center h-full bg-gray-50 ">
@@ -294,7 +296,7 @@ const ChatComponent = ({ name, photoURL }) => {
               </p>
             </div>
           ) : (
-            <div className="flex flex-col h-full ">
+            <div className="flex flex-col h-[90vh] ">
               <div className="p-4 border-b flex items-center space-x-4 bg-[#E3E1D9]">
                 <img
                   src={click.photoURL}
