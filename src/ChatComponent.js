@@ -202,6 +202,7 @@ const ChatComponent = ({ name, photoURL }) => {
                   {" "}
                   {auth.currentUser.displayName}
                 </h2>
+                {console.log(auth, "auth")}
                 <p className="text-indigo-200 text-sm">Online</p>
               </div>
             </div>
@@ -296,7 +297,7 @@ const ChatComponent = ({ name, photoURL }) => {
               </p>
             </div>
           ) : (
-            <div className="flex flex-col h-[90vh] ">
+            <div className="flex flex-col h-[90vh] md:h-screen ">
               <div className="p-4 border-b flex items-center space-x-4 bg-[#E3E1D9]">
                 <img
                   src={click.photoURL}
