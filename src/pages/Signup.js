@@ -1,5 +1,9 @@
 import React, { useState } from "react";
-import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  updateProfile,
+} from "firebase/auth";
 import { useNavigate } from "react-router";
 import { ref, set, get } from "firebase/database";
 import { database, auth } from "../firebase";
@@ -60,6 +64,11 @@ const Signup = () => {
         password
       );
       const createdUser = result.user;
+
+      // 🔧 Set display name after signup
+      await updateProfile(createdUser, {
+        displayName: createdUser.email.split("@")[0],
+      });
       // Save the user to Realtime Database
       const userRef = ref(database, `users/${createdUser.uid}`);
       // Construct user profile data

@@ -191,15 +191,21 @@ const ChatComponent = ({ name, photoURL }) => {
         >
           {/* <ProfileSection /> */}
           <div className="p-4 bg-[#727D73] text-white">
-            <div className="flex items-center space-x-4">
-              <img
-                src={auth.currentUser.photoURL}
-                alt="Profile"
-                className="w-12 h-12 rounded-full border-2 border-white"
-              />
+            <div className="flex justify-start space-x-4">
+              {auth.currentUser.photoURL ? (
+                <img
+                  src={auth.currentUser.photoURL}
+                  alt="Profile"
+                  className="w-12 h-12 rounded-full border-2 border-white"
+                />
+              ) : (
+                <div className="w-12 h-12 rounded-full border-2 border-white  bg-red-500 text-xl flex items-center justify-center ">
+                  <span> {auth.currentUser.displayName[0].toUpperCase()}</span>
+                </div>
+              )}
+
               <div>
                 <h2 className="font-bold text-lg">
-                  {" "}
                   {auth.currentUser.displayName}
                 </h2>
                 {console.log(auth, "auth")}
@@ -235,11 +241,18 @@ const ChatComponent = ({ name, photoURL }) => {
                 >
                   <div className="flex items-center space-x-4">
                     <div className="relative">
-                      <img
-                        src={user.photoURL}
-                        alt={user.displayName}
-                        className="w-10 h-10 rounded-full"
-                      />
+                      {user.photoURL ? (
+                        <img
+                          src={user.photoURL}
+                          alt={user.displayName}
+                          className="w-10 h-10 rounded-full"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-full border-2 border-white flex items-center justify-center bg-red-500 text-xl">
+                          {user.displayName[0].toUpperCase()}
+                        </div>
+                      )}
+
                       {user.online && (
                         <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-white rounded-full"></span>
                       )}
@@ -299,11 +312,17 @@ const ChatComponent = ({ name, photoURL }) => {
           ) : (
             <div className="flex flex-col h-[90vh] md:h-screen ">
               <div className="p-4 border-b flex items-center space-x-4 bg-[#E3E1D9]">
-                <img
-                  src={click.photoURL}
-                  alt="Friend"
-                  className="w-10 h-10 rounded-full"
-                />
+                {click.photoURL ? (
+                  <img
+                    src={click.photoURL}
+                    alt="Friend"
+                    className="w-10 h-10 rounded-full"
+                  />
+                ) : (
+                  <div className="w-12 h-12 rounded-full border-2 border-white flex items-center justify-center bg-red-500 text-xl">
+                    {click.displayName[0].toUpperCase()}
+                  </div>
+                )}
                 <div>
                   <h2 className="font-bold">{click.displayName}</h2>
                   {/* <p className="text-sm text-gray-500">Online</p> */}
