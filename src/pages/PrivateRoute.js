@@ -2,6 +2,7 @@ import { Navigate } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth"; // Import onAuthStateChanged
 import React, { useState, useEffect } from "react";
 import { auth } from "../firebase";
+import Loader from "../components/Loader";
 
 const PrivateRoute = ({ children }) => {
   const [loading, setLoading] = useState(true); // Loading state
@@ -23,7 +24,12 @@ const PrivateRoute = ({ children }) => {
   }, []); // Empty dependency array to ensure it runs only on mount
 
   // Show loading indicator while checking auth state
-  if (loading) return <>...loading</>;
+  if (loading)
+    return (
+      <>
+        <Loader />
+      </>
+    );
   // Render the children if authenticated, otherwise navigate to login
   console.log(user, "usersssssss");
   return user ? <>{children}</> : <Navigate to="/login" />;
