@@ -11,6 +11,7 @@ const LoginComponent = ({ checklogin }) => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
   let navigate = useNavigate();
   // google signup
   const handleGoogleSignup = async () => {
@@ -41,13 +42,25 @@ const LoginComponent = ({ checklogin }) => {
 
       // Pass the logged-in user data to the parent component (if needed)
       checklogin(loggedInUser); // Assuming this function updates the parent component's state
+      navigate("/");
     } catch (error) {
-      console.error("Login Error:", error);
+      console.log(error);
+      // Error handling based on code
+      if (error.code === "auth/user-not-found") {
+        alert("No user found with this email.");
+      } else if (error.code === "auth/invalid-credential") {
+        alert("Incorrect password.");
+      } else if (error.code === "auth/invalid-email") {
+        alert("Email format is invalid.");
+      } else {
+        alert("Login failed: " + error.message);
+      }
+
+      console.error("Login error:", error.code);
     }
 
     setLoading(false);
     // window.location.href = "/";
-    navigate("/");
   };
   const forgotPassword = async (email) => {
     try {
@@ -71,9 +84,24 @@ const LoginComponent = ({ checklogin }) => {
       setError("");
       navigate("/");
       // redirect or show success message
-    } catch (err) {
-      console.error(err.message);
-      //   setError(err.message);
+    } catch (error) {
+      console.log(error);
+      // Error handling based on code
+      // if (error.code === "auth/user-not-found") {
+      //   alert("No user found with this email.");
+      // }
+      if (error.code === "auth/invalid-credential") {
+        // alert("Invalid-credential");
+        setError("Invalid-credential");
+      } else if (error.code === "auth/invalid-email") {
+        // alert("Email format is invalid.");
+        setError("Email format is invalid.");
+      } else {
+        // alert("Login failed: " + error.message);
+        setError("Login failed: " + error.message);
+      }
+
+      console.error("Login error:", error.code);
     }
   };
   return (
@@ -124,6 +152,7 @@ const LoginComponent = ({ checklogin }) => {
                 </a>
               </p>
             </div>
+            <span className="text-red-600">{error}</span>
             <button
               onClick={handleLogin}
               className="bg-gradient-to-r from-indigo-500 to-blue-500 text-white font-bold py-2 px-4 rounded-md mt-4 hover:bg-indigo-600 hover:to-blue-600 transition ease-in-out duration-150"

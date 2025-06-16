@@ -16,6 +16,7 @@ const Signup = () => {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [file, setFile] = useState("");
   const [imageURL, setImageURL] = useState("");
+  const [error, setError] = useState("");
   let navigate = useNavigate();
 
   const handleGoogleSignup = async () => {
@@ -95,7 +96,18 @@ const Signup = () => {
       // Redirect to login or dashboard
       navigate("/login");
     } catch (error) {
-      // setError(error.message);
+      console.log(error.code);
+      if (error.code === "auth/email-already-in-use") {
+        // alert("This email is already in use. Please log in instead.");
+        setError("This email is already in use.");
+      } else if (error.code === "auth/invalid-email") {
+        setError("Email format is invalid.");
+      } else if (error.code === "auth/weak-password") {
+        setError("weak password");
+      } else {
+        console.error("Signup error:", error.message);
+        alert(error.message);
+      }
     }
   };
 
@@ -300,6 +312,7 @@ const Signup = () => {
               }}
             />
           </div>
+          <span className="text-red-600">{error}</span>
           <div className="text-right mb-4">
             <a
               className="text-xs font-display font-semibold text-blue-500  hover:underline  cursor-pointer"
