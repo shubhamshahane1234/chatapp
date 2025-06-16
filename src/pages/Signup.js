@@ -11,7 +11,11 @@ import { signinWithGoogle } from "../firebase"; // Make sure loginWithGoogle is 
 
 const Signup = () => {
   const [email, setemail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setpassword] = useState("");
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [file, setFile] = useState("");
+  const [imageURL, setImageURL] = useState("");
   let navigate = useNavigate();
 
   const handleGoogleSignup = async () => {
@@ -67,8 +71,10 @@ const Signup = () => {
 
       // 🔧 Set display name after signup
       await updateProfile(createdUser, {
-        displayName: createdUser.email.split("@")[0],
+        displayName: username,
       });
+      let picurl = await handleImageUpload(createdUser);
+
       // Save the user to Realtime Database
       const userRef = ref(database, `users/${createdUser.uid}`);
       // Construct user profile data
@@ -76,9 +82,9 @@ const Signup = () => {
       if (!userSnapshot.exists()) {
         const newUser = {
           uid: createdUser.uid,
-          displayName: createdUser.email.split("@")[0], // Use part of email as displayName
+          displayName: username, // Use part of email as displayName
           email: createdUser.email,
-          photoURL: "", // No photo for email sign-up unless you allow upload
+          photoURL: picurl || "", // No photo for email sign-up unless you allow upload
           online: true,
           lastOnline: Date.now(),
         };
@@ -90,6 +96,44 @@ const Signup = () => {
       navigate("/login");
     } catch (error) {
       // setError(error.message);
+    }
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const localUrl = URL.createObjectURL(file); // 👈 create local image URL
+      setPreviewUrl(localUrl);
+      setFile(file);
+    }
+  };
+
+  const handleImageUpload = async (createuser) => {
+    // const file = e.target.files[0];
+    const formData = new FormData();
+
+    formData.append("file", file);
+    formData.append("upload_preset", "user_profile_pics"); // your preset name
+
+    try {
+      const response = await fetch(
+        "https://api.cloudinary.com/v1_1/dsaifekeo/upload",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const data = await response.json();
+      setImageURL(data.secure_url); // get the uploaded image URL
+      console.log("Image URL:", data.secure_url);
+      await updateProfile(createuser, {
+        photoURL: data.secure_url,
+      });
+      return data.secure_url;
+      // Now save this URL to your database (e.g., Firebase Firestore)
+    } catch (error) {
+      console.error("Upload error:", error);
     }
   };
 
@@ -180,7 +224,51 @@ const Signup = () => {
           <h1 className="text-center text-2xl font-bold text-gray-900">
             Sign In{" "}
           </h1>
+
+          {/* upload image start  */}
+          <form className="flex items-center space-x-6">
+            <div className="shrink-0">
+              <img
+                className="h-16 w-16 object-cover rounded-full"
+                src={
+                  previewUrl ||
+                  "https://static.vecteezy.com/system/resources/previews/009/734/564/non_2x/default-avatar-profile-icon-of-social-media-user-vector.jpg"
+                }
+                alt="Current profile pic"
+              />
+            </div>
+            <label className="block">
+              <span className="sr-only">Choose profile photo</span>
+              <input
+                type="file"
+                onChange={handleImageChange}
+                className="block w-full text-sm text-slate-500
+              file:mr-4 file:py-2 file:px-4
+              file:rounded-full file:border-0
+              file:text-sm file:font-semibold
+              file:bg-violet-50 file:text-violet-700
+              hover:file:bg-violet-100"
+              />
+            </label>
+          </form>
+          {/* upload image end  */}
           <div className="mt-5">
+            <label
+              className="font-semibold text-sm text-gray-600 pb-1 block"
+              htmlFor="login"
+            >
+              Username
+            </label>
+            <input
+              className="border rounded-lg px-3 py-2 mt-1 mb-5 text-sm w-full"
+              type="text"
+              id="login"
+              value={username}
+              onChange={(e) => {
+                setUsername(e.target.value);
+              }}
+            />
+
             <label
               className="font-semibold text-sm text-gray-600 pb-1 block"
               htmlFor="login"
